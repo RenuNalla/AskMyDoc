@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+#ENVIRONMENTS
+.env/
+envi/
+/user.txt/
+
 # Distribution / packaging
 .Python
 build/
@@ -156,6 +161,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+envi/
+.vscode/
 
 # Spyder project settings
 .spyderproject
@@ -177,6 +184,7 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+__pycache__/
 
 # Cython debug symbols
 cython_debug/
@@ -216,3 +224,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+/user.txt/

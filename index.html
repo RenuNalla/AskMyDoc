@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Groundwork</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; }
+  h1 { margin-bottom: 4px; }
+  p.tagline { color: #666; margin-top: 0; }
+  textarea, input[type=file] { width: 100%; box-sizing: border-box; }
+  textarea { height: 70px; font-size: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 15px; border: none; border-radius: 6px; background: #1a1a1a; color: white; cursor: pointer; }
+  button:disabled { background: #999; cursor: not-allowed; }
+  #answer { margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; white-space: pre-wrap; min-height: 20px; }
+  #sources { margin-top: 12px; font-size: 13px; color: #555; }
+  .source-item { margin-bottom: 4px; }
+  section { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
+</style>
+</head>
+<body>
+
+<h1>Ask My Doc</h1>
+<p class="tagline">Grounded answers, cited from your own documents.</p>
+
+<textarea id="question" placeholder="Ask a question about your uploaded document..."></textarea>
+<br>
+<button id="askBtn" onclick="ask()">Ask</button>
+
+<div id="answer"></div>
+<div id="sources"></div>
+
+<section>
+  <h3>Upload a document</h3>
+  <input type="file" id="fileInput" accept=".pdf,.txt">
+  <button id="uploadBtn" onclick="uploadFile()">Ingest</button>
+  <div id="uploadStatus" style="margin-top:8px; font-size:14px; color:#555;"></div>
+</section>
+
+<script>
+  // Change this if your backend runs somewhere other than localhost:8000
+  const API_BASE = "http://127.0.0.1:8000";
+
+  async function ask() {
+    const question = document.getElementById("question").value.trim();
+    if (!question) return;
+
+    const askBtn = document.getElementById("askBtn");
+    const answerDiv = document.getElementById("answer");
+    const sourcesDiv = document.getElementById("sources");
+
+    askBtn.disabled = true;
+    answerDiv.textContent = "Thinking...";
+    sourcesDiv.innerHTML = "";
+
+    try {
+      const res = await fetch(`${API_BASE}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+
+      answerDiv.textContent = data.answer;
+      sourcesDiv.innerHTML = "<strong>Sources:</strong><br>" +
+        data.sources.map(s => `<div class="source-item">${s.source} — chunk ${s.chunk_index} (score ${s.score})</div>`).join("");
+    } catch (err) {
+      answerDiv.textContent = "Error: " + err.message;
+    } finally {
+      askBtn.disabled = false;
+    }
+  }
+
+  async function uploadFile() {
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const status = document.getElementById("uploadStatus");
+
+    if (!fileInput.files.length) return;
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    uploadBtn.disabled = true;
+    status.textContent = "Uploading and ingesting... this can take a minute.";
+
+    try {
+      const res = await fetch(`${API_BASE}/ingest`, { method: "POST", body: formData });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      status.textContent = `Ingested: ${data.filename}`;
+    } catch (err) {
+      status.textContent = "Error: " + err.message;
+    } finally {
+      uploadBtn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

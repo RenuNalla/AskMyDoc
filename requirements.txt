@@ -1,0 +1,8 @@
+pymongo
+sentence-transformers
+pypdf
+python-dotenv
+groq
+fastapi
+uvicorn
+python-multipart
